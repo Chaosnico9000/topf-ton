@@ -1,7 +1,29 @@
 import { motion } from "framer-motion"
-import { default as CountUp } from "react-countup"
+import { useRef, useEffect, useState } from "react"
+import { useInView } from "framer-motion"
 import { Quote } from "lucide-react"
 import { fadeUp, fadeRight, staggerContainer, smoothTransition } from "@/lib/motion"
+
+function AnimatedNumber({ end, suffix }: { end: number; suffix?: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const isInView = useInView(ref, { once: true })
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!isInView) return
+    let start = 0
+    const duration = 2000
+    const step = duration / end
+    const timer = setInterval(() => {
+      start += 1
+      setCount(start)
+      if (start >= end) clearInterval(timer)
+    }, step)
+    return () => clearInterval(timer)
+  }, [isInView, end])
+
+  return <span ref={ref}>{count}{suffix}</span>
+}
 
 const stats = [
   { end: 10, suffix: "+", label: "Jahre Erfahrung" },
@@ -115,7 +137,7 @@ export default function About() {
                 >
                   <p className="text-2xl sm:text-3xl font-bold text-[#a0522d] font-serif leading-none">
                     {"end" in stat ? (
-                      <CountUp end={stat.end!} suffix={stat.suffix} duration={2.5} enableScrollSpy scrollSpyOnce />
+                      <AnimatedNumber end={stat.end!} suffix={stat.suffix} />
                     ) : stat.value}
                   </p>
                   <p className="text-[10px] sm:text-xs text-[#7a3e1f] mt-1.5 sm:mt-2 leading-tight font-medium">{stat.label}</p>

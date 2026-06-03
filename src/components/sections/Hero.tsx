@@ -1,6 +1,5 @@
-import { useRef } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
-import { default as CountUp } from "react-countup"
+import { useRef, useEffect, useState } from "react"
+import { motion, useScroll, useTransform, useInView } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, Sparkles } from "lucide-react"
 
@@ -9,6 +8,27 @@ const stats = [
   { end: 500, suffix: "+", label: "Kurs-\nteilnehmer" },
   { end: 100, suffix: "%", label: "Hand-\ngemacht" },
 ]
+
+function AnimatedNumber({ end, suffix }: { end: number; suffix: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const isInView = useInView(ref, { once: true })
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!isInView) return
+    let start = 0
+    const duration = 2000
+    const step = duration / end
+    const timer = setInterval(() => {
+      start += 1
+      setCount(start)
+      if (start >= end) clearInterval(timer)
+    }, step)
+    return () => clearInterval(timer)
+  }, [isInView, end])
+
+  return <span ref={ref}>{count}{suffix}</span>
+}
 
 export default function Hero() {
   const containerRef = useRef<HTMLElement>(null)
@@ -142,7 +162,7 @@ export default function Hero() {
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
               <p className="text-2xl sm:text-3xl font-bold text-[#e8c9a8] font-serif leading-none drop-shadow">
-                <CountUp end={stat.end} suffix={stat.suffix} duration={2.5} enableScrollSpy scrollSpyOnce />
+                <AnimatedNumber end={stat.end} suffix={stat.suffix} />
               </p>
               <p className="text-[10px] sm:text-xs text-[#d4956e]/90 mt-1.5 tracking-widest uppercase font-medium leading-tight whitespace-pre-line">
                 {stat.label}
